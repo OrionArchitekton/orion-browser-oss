@@ -1,0 +1,4 @@
+include config.example.toml SECURITY.md CHANGELOG.md
+recursive-include docs *.md
+prune docs/superpowers
+recursive-include specs *.md
