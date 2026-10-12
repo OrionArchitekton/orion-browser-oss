@@ -9,7 +9,7 @@ description = "Signed-in Chrome browsers for AI agents: one per identity, leased
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
-dependencies = ["mcp>=2.2,<3", "websockets>=15,<18"]
+dependencies = ["mcp>=2.3.0,<3", "websockets>=15,<18"]
 
 [project.urls]
 Repository = "https://github.com/OrionArchitekton/orion-browser-oss"
