@@ -1,0 +1,3 @@
+include config.example.toml SECURITY.md CHANGELOG.md
+recursive-include docs *.md
+recursive-include specs *.md
