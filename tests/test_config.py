@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import pwd
+import pwd as account_database
 import re
 from pathlib import Path
 from types import SimpleNamespace
@@ -270,7 +270,7 @@ def test_no_home_directory_is_usage_unless_paths_are_set(monkeypatch):
         raise KeyError(f"getpwuid(): uid not found: {uid}")
 
     monkeypatch.delenv("HOME", raising=False)  # a set HOME is used as it is; the user database is asked only without it
-    monkeypatch.setattr(pwd, "getpwuid", no_entry)  # and it has no entry for this account
+    monkeypatch.setattr(account_database, "getpwuid", no_entry)  # and it has no entry for this account
     assert "no home directory" in refused(paths={})
     assert parse().state_dir == Path("/srv/obtest/state")  # both paths set: no home needed
 
@@ -446,7 +446,7 @@ def test_a_tilde_expands_to_the_home_the_defaults_use(tmp_path, monkeypatch, raw
 
 def test_without_home_the_account_home_from_the_user_database_is_used(tmp_path, monkeypatch):
     monkeypatch.delenv("HOME", raising=False)
-    monkeypatch.setattr(pwd, "getpwuid", lambda uid: SimpleNamespace(pw_dir=str(tmp_path / "account")))
+    monkeypatch.setattr(account_database, "getpwuid", lambda uid: SimpleNamespace(pw_dir=str(tmp_path / "account")))
     cfg = parse(paths={}, view={"novnc_dir": "~/novnc"})
     assert cfg.state_dir == tmp_path / "account" / ".local" / "state" / "orion-browser"
     assert cfg.novnc_dir == tmp_path / "account" / "novnc"
@@ -502,7 +502,7 @@ def test_load_accepts_separate_folders_even_when_one_is_a_link(tmp_path, monkeyp
 def test_an_account_home_that_is_empty_or_relative_is_usage_through_load(tmp_path, monkeypatch, pw_dir):
     monkeypatch.chdir(tmp_path)  # a relative home would resolve against this folder: two callers, two lease stores
     monkeypatch.delenv("HOME", raising=False)
-    monkeypatch.setattr(pwd, "getpwuid", lambda uid: SimpleNamespace(pw_dir=pw_dir))
+    monkeypatch.setattr(account_database, "getpwuid", lambda uid: SimpleNamespace(pw_dir=pw_dir))
     monkeypatch.setenv("ORION_BROWSER_CONFIG", str(_write_config(tmp_path)))  # no [paths]: the defaults need a home
     with pytest.raises(BrowserError) as info:
         config.load()
@@ -516,7 +516,7 @@ def test_a_bad_account_home_is_refused_before_the_default_config_is_looked_for(t
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("HOME", raising=False)
     monkeypatch.delenv("ORION_BROWSER_CONFIG", raising=False)
-    monkeypatch.setattr(pwd, "getpwuid", lambda uid: SimpleNamespace(pw_dir=pw_dir))
+    monkeypatch.setattr(account_database, "getpwuid", lambda uid: SimpleNamespace(pw_dir=pw_dir))
     with pytest.raises(BrowserError) as info:
         config.load()
     assert info.value.code is Code.USAGE
@@ -528,7 +528,7 @@ def test_a_valid_home_is_used_without_asking_the_user_database(tmp_path, monkeyp
         raise AssertionError("the user database must not be asked while HOME is set")
 
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
-    monkeypatch.setattr(pwd, "getpwuid", forbidden)
+    monkeypatch.setattr(account_database, "getpwuid", forbidden)
     assert parse(paths={}).state_dir == tmp_path / "home" / ".local" / "state" / "orion-browser"
 
 
@@ -548,7 +548,7 @@ def test_no_home_at_all_still_loads_when_every_path_is_explicit(tmp_path, monkey
         raise KeyError(f"getpwuid(): uid not found: {uid}")
 
     monkeypatch.delenv("HOME", raising=False)
-    monkeypatch.setattr(pwd, "getpwuid", no_entry)
+    monkeypatch.setattr(account_database, "getpwuid", no_entry)
     monkeypatch.setenv("ORION_BROWSER_CONFIG", str(_write_config(tmp_path, _paths_in(tmp_path))))
     cfg = config.load()
     assert (cfg.state_dir, cfg.profiles_dir) == (tmp_path / "state", tmp_path / "profiles")
