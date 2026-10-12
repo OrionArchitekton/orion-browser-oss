@@ -119,6 +119,13 @@ def test_setup_names_each_missing_tool_and_the_install_command(env):
     assert not (env.root / "state").exists()  # nothing is prepared while something is missing
 
 
+def test_setup_refuses_a_directory_as_the_chrome_program(env):
+    env.rewrite_config(f'path = "{env.root}/bin/google-chrome"', f'path = "{env.root}/bin"')
+    code, out = env.run("setup")
+    assert code == 2 and str(env.root / "bin") in out["message"], out
+    assert not (env.root / "state").exists()
+
+
 def test_setup_names_a_missing_chrome(env):
     (env.root / "bin" / "google-chrome").unlink()
     code, out = env.run("setup")

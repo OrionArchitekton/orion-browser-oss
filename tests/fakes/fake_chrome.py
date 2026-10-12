@@ -138,12 +138,16 @@ def main(argv: list[str]) -> int:
                 continue
             if path.startswith("/devtools/page/PAGE") and method == "Runtime.evaluate":
                 answers = fakesys.chrome_knobs(profile.name)
+                page_index = int(path.rsplit("PAGE", 1)[1]) - 1
+                if page_index in answers["page_errors"]:
+                    ws.send(json.dumps({"id": message["id"], "error": {"message": "target closed"}}))
+                    continue
                 focused = (fakesys.root() / f"focus-{display}").exists() and not (bubble or address_bar)
                 expression = message.get("params", {}).get("expression", "")
                 if answers["stringify_spoof"] and "JSON.stringify" in expression:
                     value = '["visible",true,false]'
                 elif answers["page_answers"] is not None:
-                    value = answers["page_answers"][int(path.rsplit("PAGE", 1)[1]) - 1]
+                    value = answers["page_answers"][page_index]
                 elif answers["deep_state"]:  # a page that replaced JSON.stringify can answer anything
                     value = "[" * DEEP + "]" * DEEP
                 elif answers["page_answer"] is not None:

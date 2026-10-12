@@ -30,6 +30,7 @@ CHROME_DEFAULTS = {
     "deep_state": False,  # the page answers the state query with JSON nested too deep to parse (as a page can)
     "page_answer": None,  # the page answers the state query with exactly this value instead of its state
     "page_answers": None,  # ordered answers for several page targets, as with multiple Chrome windows
+    "page_errors": [],  # zero-based page targets whose evaluation fails, as when a listed tab closes
     "stringify_spoof": False,  # a page replaces JSON.stringify with a fabricated healthy report
     "ignores_automation_flag": False,  # a Chrome that marks itself automated despite --disable-blink-features
     "stall_version": 0,  # seconds /json/version waits before it answers (cut short when the fake stops)

@@ -60,7 +60,7 @@ def chrome_build(cfg: Config) -> dict[str, object]:
 def run(cfg: Config) -> Result:
     missing: list[str] = []
     packages: set[str] = set()
-    if not os.access(cfg.chrome, os.X_OK):
+    if not cfg.chrome.is_file() or not os.access(cfg.chrome, os.X_OK):
         missing.append(f"{cfg.chrome} (Google Chrome stable, from Google's own package)")
     for tool, package in TOOLS:
         if shutil.which(tool) is None:

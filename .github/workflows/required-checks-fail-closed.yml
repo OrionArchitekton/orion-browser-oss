@@ -30,7 +30,7 @@ env:
   # Every check in this list must reach a passing terminal state for the gate to pass.
   # If a check never appears within the timeout, the gate fails closed.
   REQUIRED_CHECKS: "lint,unit,gitleaks"
-  MAX_ATTEMPTS: "40"
+  MAX_ATTEMPTS: "81"
   SLEEP_SECONDS: "15"
   # Total sleep time is approximately (MAX_ATTEMPTS - 1) * SLEEP_SECONDS,
   # plus API and processing overhead, because the script sleeps only
@@ -40,6 +40,7 @@ jobs:
   required-checks-fail-closed:
     name: required-checks-fail-closed
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     if: github.event_name == 'pull_request'
     steps:
       - name: Verify required checks completed successfully

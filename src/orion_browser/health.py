@@ -100,7 +100,10 @@ def _ask_devtools(health: Health, port_file: devtools.PortFile, deadline: float 
     visible_state = None
     for page in devtools.pages(port_file.port, timeout=_time_for(deadline, devtools.TIMEOUT)):
         endpoint = devtools.page_endpoint(port_file.port, page["id"])
-        raw = devtools.evaluate(endpoint, STATE_EXPRESSION, timeout=_time_for(deadline, devtools.TIMEOUT))
+        try:
+            raw = devtools.evaluate(endpoint, STATE_EXPRESSION, timeout=_time_for(deadline, devtools.TIMEOUT))
+        except devtools.DevToolsError:
+            continue  # a listed page can close or throw; another page may still prove healthy
         state = _page_state(raw)
         if state is not None and state[0] == "visible":
             visible_state = state

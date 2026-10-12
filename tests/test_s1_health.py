@@ -245,6 +245,18 @@ def test_page_stringify_override_cannot_forge_a_healthy_status(env):
     assert code == 7 and out["data"]["failed"] == ["webdriver"], out
 
 
+def test_status_checks_remaining_pages_after_a_target_closes(env):
+    assert env.run("lease", "work", "--holder", "a")[0] == 0
+    env.set_chrome("work", page_answers=[
+        ["visible", False, False], ["visible", True, False],
+    ], page_errors=[0])
+    code, out = env.run("status", "work")
+    assert code == 0 and out["data"]["state"] == "healthy", out
+    env.set_chrome("work", page_errors=[0, 1])
+    code, out = env.run("status", "work")
+    assert code == 7 and out["data"]["failed"] == NO_TAB, out
+
+
 def test_a_page_answer_that_cannot_be_parsed_fails_the_start_cleanly(env):
     """An unusable answer to the state query is a failed check like any other: the start fails as unhealthy, frees the lease and stops the session (S4), and never
     ends in an internal error that leaves the session running."""

@@ -110,6 +110,7 @@ Acceptance:
   Google Chrome from Google's own package, the VNC display server, websockify, the noVNC web files,
   the service manager's user instance, xdotool (focus, Q1) and xwd (screen captures). It never installs
   a package and never runs anything as root: it prints the install command for the operator to run.
+  The configured Chrome path must resolve to a regular executable file, not a directory.
 - `setup` creates the state, profile and download directories owner-only, and refuses with USAGE any of
   them that is inside a git working tree or is not an absolute path (a leading `~` is expanded to the
   home directory; a path holding a NUL character is refused). A browser's profile or download folder can
@@ -133,7 +134,8 @@ Acceptance:
   - the endpoint named in a port file written after this session started answers, and the address it
     reports matches the file;
   - the active tab's page reports itself visible and focused; with multiple windows, a visible
-    but unfocused page does not prevent checking the remaining pages for the focused one;
+    but unfocused page does not prevent checking the remaining pages for the focused one; an
+    unreadable or closed page is skipped, and health still requires a readable focused page;
   - the same page reports `navigator.webdriver` false: Chrome does not mark the browser as automated
     (Google refuses sign-in in a browser that reports automation, Q3);
   - the browser's user agent is not a headless one;

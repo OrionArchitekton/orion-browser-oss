@@ -887,14 +887,14 @@ def test_a_link_under_another_browser_name_shares_the_start_lock(env):
     one gets it, the other is refused, and only one Chrome ever opens the profile."""
     env.profile("work").mkdir(parents=True, exist_ok=True)
     (env.root / "profiles2").mkdir()
-    (env.root / "profiles2" / "work").symlink_to(env.profile("work"))
+    (env.root / "profiles2" / "other").symlink_to(env.profile("work"))
     text = (env.root / "config.toml").read_text().replace(f'"{env.root}/state"', f'"{env.root}/state2"')
-    text = text.replace(f"screen = {SCREENS['work']}", "screen = 92").replace('name = "work"', 'name = "work"')
+    text = text.replace(f"screen = {SCREENS['work']}", "screen = 92").replace('name = "work"', 'name = "other"')
     second = env.root / "second.toml"
     second.write_text(text.replace(f'"{env.root}/profiles"', f'"{env.root}/profiles2"'))
     first = env.popen("lease", "work", "--holder", "a")
     other = subprocess.Popen(
-        [sys.executable, "-m", "orion_browser", "--json", "lease", "work", "--holder", "b"],
+        [sys.executable, "-m", "orion_browser", "--json", "lease", "other", "--holder", "b"],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         env={**env.env, "ORION_BROWSER_CONFIG": str(second)},
     )
