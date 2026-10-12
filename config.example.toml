@@ -1,0 +1,37 @@
+# orion-browser config. Copy it to ~/.config/orion-browser/config.toml and edit it.
+
+[chrome]
+path = "/usr/bin/google-chrome"  # Google Chrome stable, from Google's own package
+
+[screen]
+width = 1920
+height = 1080
+
+[lease]
+ttl_minutes = 30   # a lease lasts this long unless its holder leases again
+max_minutes = 240  # the longest --minutes a holder may ask for
+
+[timing]
+stop_grace_seconds = 15            # how long a stop waits for Chrome to close through DevTools
+service_stop_timeout_seconds = 30  # at least 10 seconds longer than the grace
+start_limit_seconds = 30           # how long a start may take to prove healthy
+
+# [paths]
+# state = "~/.local/state/orion-browser"
+# profiles = "~/.local/share/orion-browser/profiles"
+
+[view]
+novnc_dir = "/usr/share/novnc"
+
+# One [[browser]] per identity. Screen numbers are 10 to 99: VNC listens on 5900 plus the number, the view on 6080
+# plus the number, both on loopback. Leave the name smoke and screen 89 free: the smoke test runs its own browser
+# with them.
+
+[[browser]]
+name = "anon"  # signed in to nothing
+screen = 20
+
+[[browser]]
+name = "work"
+screen = 21
+# restore_session = true  # only if a platform signs out across a clean stop and start

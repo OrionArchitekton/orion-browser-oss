@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+
+# Browser artifacts never belong in git
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.xwd
+*.jsonl
+*.mp4
+*.webm
+*.har
+*.sqlite
+*.db
+
+# Documentation images are the one exception, under docs/assets/ only
+!docs/assets/**/*.png
+!docs/assets/**/*.jpg
+!docs/assets/**/*.jpeg
+!docs/assets/**/*.webp
+!docs/assets/**/*.gif
+
+# Chrome profile files: cookies, saved logins, form data, history, settings, the DevTools port
+Cookies
+Cookies-journal
+Login Data
+Login Data-journal
+Web Data
+Web Data-journal
+History
+History-journal
+Local State
+Preferences
+Secure Preferences
+DevToolsActivePort
+
+# Browser data directories and cookie exports
+Default/
+Profile */
+Guest Profile/
+System Profile/
+*storage*state*.json
+cookies*.json
+cookies.txt
+
+# Config, state and profiles live outside the repo by design
+config.toml
+state/
+profiles/
+.env*
+
+# Internal planning documents stay out of the public repository
+docs/superpowers/

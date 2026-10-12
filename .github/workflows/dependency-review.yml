@@ -1,0 +1,42 @@
+# Dependency Review - PR supply-chain gate  (PUBLIC / GHAS-only)
+#
+# IMPORTANT - DO NOT add this as a required check on a PRIVATE repo without
+# GitHub Advanced Security. The dependency-review-action calls the GitHub
+# Dependency Review API
+#   GET /repos/{owner}/{repo}/dependency-graph/compare/{base}...{head}
+# which on a PRIVATE repo requires GHAS. On the estate's private free-tier
+# repos that API returns HTTP 403, so this workflow FAILS RED. Verified
+# 2026-06-28 against OrionArchitekton/cosmocrat-kernel.
+#
+# Where it applies:
+#   - PUBLIC repos: works as-is; safe to make a required check.
+#   - PRIVATE repos WITH GitHub Advanced Security: works; may be required.
+#   - PRIVATE repos WITHOUT GHAS (estate default): DO NOT adopt as a required
+#     check. Supply-chain coverage on these repos flows through
+#     .github/dependabot.yml (version updates), which needs no GHAS.
+#
+# Adoption (public / GHAS repos only):
+#   1. Copy this file into your repo's .github/workflows/
+#   2. Only then add 'dependency-review' to REQUIRED_CHECKS / branch protection.
+#
+# Provenance: estate supply-chain gate (W1), 2026-06-28.
+# Boundary: this is a governance template, not infra ops packaging.
+
+name: dependency-review
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
