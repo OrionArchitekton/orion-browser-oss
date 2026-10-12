@@ -795,23 +795,22 @@ def test_another_configs_lease_during_a_start_is_refused_by_the_start_lock(env):
     assert env.result(first)[0] == 0
 
 
-def test_a_takeover_of_a_session_already_ended_that_meets_a_collision_frees_the_lease_it_made(env):
-    """a's lease lapsed with its service already inactive. b's takeover finds the old session not running (recorded),
-    then meets a Chrome the tool did not start on the profile: BROWSER_DOWN naming it, and the lease b's attempt made
-    is freed (the takeover is done, so nothing goes back to a), never left blocking other holders until it expires.
-    The other Chrome is left alone."""
+def test_a_takeover_with_an_inactive_service_and_occupied_profile_restores_the_old_lease(env):
+    """An inactive service alone is not proof that a session is gone. While a process holds its profile,
+    a refused takeover restores the previous lease, records no completed takeover, and leaves the process alone."""
     code, first = env.run("lease", "work", "--holder", "a")
     assert code == 0, first
     subprocess.run(["systemctl", "--user", "stop", env.unit("work")], env=env.env, check=True)
     env.age_lease("work", 60)
+    previous = json.loads(env.lease_file("work").read_text())
     stray = stray_chrome(env, "work")
     try:
         code, out = env.run("lease", "work", "--holder", "b")
         assert code == 6 and f"pid {stray.pid}" in out["message"], out
-        assert not env.lease_file("work").exists()
+        assert json.loads(env.lease_file("work").read_text()) == previous
         assert stray.poll() is None
         events = env.events("work")
-        assert events[-3:] == ["takeover", "collision", "start-failed"], events
+        assert events[-2:] == ["collision", "start-failed"] and "takeover" not in events, events
     finally:
         stray.kill()
         stray.wait()

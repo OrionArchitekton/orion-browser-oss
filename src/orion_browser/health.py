@@ -6,7 +6,6 @@ error's text."""
 
 from __future__ import annotations
 
-import json
 import time
 from dataclasses import dataclass, field
 
@@ -15,7 +14,7 @@ from orion_browser.config import Browser
 
 CHECKS = ("service", "endpoint", "visible", "focused", "webdriver", "headful", "screen")
 PORT_FILE_SLACK = 1.0  # seconds: a port file this much older than the session's start still counts (coarse file clocks)
-STATE_EXPRESSION = "JSON.stringify([document.visibilityState, document.hasFocus(), navigator.webdriver])"
+STATE_EXPRESSION = "[document.visibilityState, document.hasFocus(), navigator.webdriver]"
 MARKED_AUTOMATED = (
     "the page does not report navigator.webdriver false: Chrome marks this browser as automated, and Google refuses "
     "sign-in in it"
@@ -98,34 +97,31 @@ def _ask_devtools(health: Health, port_file: devtools.PortFile, deadline: float 
         health.notes["endpoint"] = OTHER_ADDRESS
     agent = str(answer.get("User-Agent", ""))
     health.checks["headful"] = bool(agent) and "Headless" not in agent
+    visible_state = None
     for page in devtools.pages(port_file.port, timeout=_time_for(deadline, devtools.TIMEOUT)):
         endpoint = devtools.page_endpoint(port_file.port, page["id"])
         raw = devtools.evaluate(endpoint, STATE_EXPRESSION, timeout=_time_for(deadline, devtools.TIMEOUT))
         state = _page_state(raw)
         if state is not None and state[0] == "visible":
-            health.checks["visible"] = True
-            health.checks["focused"] = state[1] is True  # a real true: a page can answer anything truthy
-            health.checks["webdriver"] = state[2] is False  # a real false: anything else may be marked automated
-            if not health.checks["webdriver"]:
-                health.notes["webdriver"] = MARKED_AUTOMATED
-            return
-    health.notes["visible"] = NO_VISIBLE_TAB
+            visible_state = state
+            if state[1] is True:  # several windows can each have a visible tab; only one has focus
+                break
+    if visible_state is None:
+        health.notes["visible"] = NO_VISIBLE_TAB
+        return
+    health.checks["visible"] = True
+    health.checks["focused"] = visible_state[1] is True  # a real true: a page can answer anything truthy
+    health.checks["webdriver"] = visible_state[2] is False  # judged on that same page, never another window
+    if not health.checks["webdriver"]:
+        health.notes["webdriver"] = MARKED_AUTOMATED
 
 
 def _page_state(raw: object) -> tuple[object, object, object] | None:
-    """A tab's answer to STATE_EXPRESSION as (visibility, focus, webdriver), or None for anything but the three-item
-    JSON array the expression gives. The page makes the answer (it can replace JSON.stringify), so the answer is
-    untrusted: text that is not JSON, JSON nested too deep to parse and any other shape all count as a tab that does
-    not show itself."""
-    if not isinstance(raw, str):
+    """Accept only the three-item array returned by DevTools value serialization. Never invoke a page's
+    JSON.stringify. Page-reported properties remain untrusted, so this is a health signal, not attestation."""
+    if not isinstance(raw, list) or len(raw) != 3:
         return None
-    try:
-        state = json.loads(raw)
-    except (ValueError, RecursionError):
-        return None
-    if not isinstance(state, list) or len(state) != 3:
-        return None
-    return state[0], state[1], state[2]
+    return raw[0], raw[1], raw[2]
 
 
 def _time_for(deadline: float | None, default: float) -> float:

@@ -113,8 +113,11 @@ def main(argv: list[str]) -> int:
                 "webSocketDebuggerUrl": f"ws://{host}:{port}/devtools/browser/{reported}",
             }))
         if request.path == "/json/list":
+            page_answers = fakesys.chrome_knobs(profile.name)["page_answers"]
+            count = len(page_answers) if page_answers is not None else 1
             return connection.respond(HTTPStatus.OK, json.dumps(
-                [{"type": "page", "id": "PAGE1", "url": start_page, "title": start_page}]
+                [{"type": "page", "id": f"PAGE{n + 1}", "url": start_page, "title": start_page}
+                 for n in range(count)]
             ))
         return None  # anything else is a websocket handshake
 
@@ -133,18 +136,23 @@ def main(argv: list[str]) -> int:
                     else:
                         stop.set()
                 continue
-            if path == "/devtools/page/PAGE1" and method == "Runtime.evaluate":
+            if path.startswith("/devtools/page/PAGE") and method == "Runtime.evaluate":
                 answers = fakesys.chrome_knobs(profile.name)
                 focused = (fakesys.root() / f"focus-{display}").exists() and not (bubble or address_bar)
-                if answers["deep_state"]:  # a page that replaced JSON.stringify can answer anything
+                expression = message.get("params", {}).get("expression", "")
+                if answers["stringify_spoof"] and "JSON.stringify" in expression:
+                    value = '["visible",true,false]'
+                elif answers["page_answers"] is not None:
+                    value = answers["page_answers"][int(path.rsplit("PAGE", 1)[1]) - 1]
+                elif answers["deep_state"]:  # a page that replaced JSON.stringify can answer anything
                     value = "[" * DEEP + "]" * DEEP
                 elif answers["page_answer"] is not None:
                     value = answers["page_answer"]
                 else:
                     state = ["visible" if answers["visible"] else "hidden", focused]
-                    if "navigator.webdriver" in message.get("params", {}).get("expression", ""):
+                    if "navigator.webdriver" in expression:
                         state.append(debug_port and (answers["ignores_automation_flag"] or not unmarked))
-                    value = json.dumps(state)
+                    value = json.dumps(state) if "JSON.stringify" in expression else state
                 kind = "string" if isinstance(value, str) else "object"
                 reply["result"] = {"result": {"type": kind, "value": value}}
             ws.send(json.dumps(reply))

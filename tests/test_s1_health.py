@@ -184,26 +184,25 @@ ONE_CHECK = {
     "stale-port-file": (
         _date_port_file_before_the_start, ["endpoint", "visible", "focused", "webdriver", "headful", "screen"]
     ),
-    # A page can replace JSON.stringify, so its answer to the state query is untrusted: whatever shape it takes, it
-    # shows nothing, and focus is a real true, never something merely truthy.
-    "focus-not-true": (lambda env: env.set_chrome("work", page_answer=json.dumps(["visible", 1, False])), ["focused"]),
+    # Unexpected shapes from the state query show nothing. Focus must be a real true, never merely truthy.
+    "focus-not-true": (lambda env: env.set_chrome("work", page_answer=["visible", 1, False]), ["focused"]),
     "answer-not-json": (lambda env: env.set_chrome("work", page_answer="visible, focused"), NO_TAB),
-    "answer-one-item": (lambda env: env.set_chrome("work", page_answer=json.dumps(["visible"])), NO_TAB),
+    "answer-one-item": (lambda env: env.set_chrome("work", page_answer=["visible"]), NO_TAB),
     "answer-not-a-list": (
-        lambda env: env.set_chrome("work", page_answer=json.dumps({"0": "visible", "1": True, "2": False})), NO_TAB
+        lambda env: env.set_chrome("work", page_answer={"0": "visible", "1": True, "2": False}), NO_TAB
     ),
     "marked-automated": (lambda env: env.set_chrome("work", ignores_automation_flag=True), ["webdriver"]),
     # webdriver passes only on a real false: null (no such property) or a falsy 0 is not proof.
     "webdriver-null": (
-        lambda env: env.set_chrome("work", page_answer=json.dumps(["visible", True, None])), ["webdriver"]
+        lambda env: env.set_chrome("work", page_answer=["visible", True, None]), ["webdriver"]
     ),
     "webdriver-falsy-not-false": (
-        lambda env: env.set_chrome("work", page_answer=json.dumps(["visible", True, 0])), ["webdriver"]
+        lambda env: env.set_chrome("work", page_answer=["visible", True, 0]), ["webdriver"]
     ),
     "answer-old-pair": (
-        lambda env: env.set_chrome("work", page_answer=json.dumps(["visible", True])), NO_TAB
+        lambda env: env.set_chrome("work", page_answer=["visible", True]), NO_TAB
     ),
-    "answer-not-text": (lambda env: env.set_chrome("work", page_answer=["visible", True, False]), NO_TAB),
+    "answer-serialized-text": (lambda env: env.set_chrome("work", page_answer=json.dumps(["visible", True, False])), NO_TAB),
 }
 
 
@@ -228,9 +227,26 @@ def test_a_session_whose_service_is_not_active_fails_every_check(env):
     assert not env.lease_file("work").exists()
 
 
+def test_status_finds_the_focused_page_after_another_visible_window(env):
+    assert env.run("lease", "work", "--holder", "a")[0] == 0
+    env.set_chrome("work", page_answers=[
+        ["visible", False, True],
+        ["visible", True, False],
+    ])
+    code, out = env.run("status", "work")
+    assert code == 0 and out["data"]["state"] == "healthy", out
+    assert out["data"]["failed"] == []
+
+
+def test_page_stringify_override_cannot_forge_a_healthy_status(env):
+    assert env.run("lease", "work", "--holder", "a")[0] == 0
+    env.set_chrome("work", stringify_spoof=True, ignores_automation_flag=True)
+    code, out = env.run("status", "work")
+    assert code == 7 and out["data"]["failed"] == ["webdriver"], out
+
+
 def test_a_page_answer_that_cannot_be_parsed_fails_the_start_cleanly(env):
-    """A page can replace JSON.stringify, so the answer to the state query is untrusted. One nested too deep to parse is
-    a failed check like any other: the start fails as unhealthy, frees the lease and stops the session (S4), and never
+    """An unusable answer to the state query is a failed check like any other: the start fails as unhealthy, frees the lease and stops the session (S4), and never
     ends in an internal error that leaves the session running."""
     env.set_chrome("work", deep_state=True)
     code, out = env.run("lease", "work", "--holder", "a")

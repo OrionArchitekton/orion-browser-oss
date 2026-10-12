@@ -9,6 +9,8 @@ Initial public MIT release of orion-browser.
 - CLI setup, status, lease, release, and operator view commands.
 - MCP status, lease, and release tools using the same CLI boundary.
 - Synthetic integration tests, an optional real-browser smoke check, and an operations runbook.
+- Release review fixes: scan visible windows for the focused page, avoid page-controlled JSON
+  serialization, and retain the old lease when a takeover cannot prove the profile free.
 
 The public source repository is orion-browser-oss; installed commands remain
 orion-browser and orion-browser-mcp. Chrome and system dependencies are not bundled.

@@ -249,6 +249,8 @@ class Pool:
         keep it off the record. BrowserError, with nothing recorded, when the old session cannot be shown gone."""
         running = services.is_active(b.unit)
         stopped = self._stop(b, (previous or lease).session, lease.holder) if running else "none"
+        if not running:
+            self._refuse_profile_collision(b, lease)  # inactive service alone is not proof the old session is gone
         if previous:
             self.audit.record(
                 b.name, lease.holder, "takeover", lease.session,
@@ -261,16 +263,7 @@ class Pool:
         """Refuse a profile or a screen that a process the tool did not start has open: an agent's own Chrome on the
         profile, or another config's session or another VNC server on the screen's ports. That process is never
         stopped: it may be someone's work."""
-        strays = procs.holding_profile(b.profile)
-        if strays:
-            self.audit.record(b.name, lease.holder, "collision", lease.session, pids=[p["pid"] for p in strays])
-            raise BrowserError(
-                Code.BROWSER_DOWN,
-                f"browser {b.name}'s profile is open in a process orion-browser did not start ("
-                + ", ".join(f"pid {p['pid']}" for p in strays)
-                + "); it has to end before a session can start",
-                {"processes": strays},
-            )
+        self._refuse_profile_collision(b, lease)
         taken = [port for port in (b.vnc_port, b.view_port) if _answers(loopback(), port)]
         if taken:
             self.audit.record(b.name, lease.holder, "collision", lease.session, ports=taken)
@@ -280,6 +273,19 @@ class Pool:
                 + ", ".join(map(str, taken))
                 + "); it has to end before a session can start",
                 {"ports": taken},
+            )
+
+    def _refuse_profile_collision(self, b: Browser, lease: Lease) -> None:
+        """Require a free profile before recording a takeover or starting a session."""
+        strays = procs.holding_profile(b.profile)
+        if strays:
+            self.audit.record(b.name, lease.holder, "collision", lease.session, pids=[p["pid"] for p in strays])
+            raise BrowserError(
+                Code.BROWSER_DOWN,
+                f"browser {b.name}'s profile is open in a process orion-browser did not start ("
+                + ", ".join(f"pid {p['pid']}" for p in strays)
+                + "); it has to end before a session can start",
+                {"processes": strays},
             )
 
     def _start(self, b: Browser, holder: str, ttl: float, attempt: _Attempt) -> Lease:

@@ -29,6 +29,8 @@ CHROME_DEFAULTS = {
     "wrong_endpoint": False,  # /json/version names another browser's endpoint than the port file does
     "deep_state": False,  # the page answers the state query with JSON nested too deep to parse (as a page can)
     "page_answer": None,  # the page answers the state query with exactly this value instead of its state
+    "page_answers": None,  # ordered answers for several page targets, as with multiple Chrome windows
+    "stringify_spoof": False,  # a page replaces JSON.stringify with a fabricated healthy report
     "ignores_automation_flag": False,  # a Chrome that marks itself automated despite --disable-blink-features
     "stall_version": 0,  # seconds /json/version waits before it answers (cut short when the fake stops)
     # Read once, at launch:

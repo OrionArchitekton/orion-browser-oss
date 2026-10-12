@@ -22,6 +22,8 @@ orion-browser coordinates agents; it is not a sandbox. Stated plainly, as in sec
 
 ## Not defended
 
+- A hostile page forging its own page properties. Health checks avoid page-controlled JSON serialization,
+  but visibility, focus and automation properties remain diagnostic signals, not security attestation.
 - A local process of any OS user: it can connect to any session's endpoint or view without a lease, and drive any
   screen directly through its VNC port or its X server, neither of which checks who connects. One running as the
   operator's OS user can also read the profiles, whose cookies are protected only by Chrome's fixed "basic" key

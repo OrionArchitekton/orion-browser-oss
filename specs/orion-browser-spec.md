@@ -132,7 +132,8 @@ Acceptance:
   - the session's service is active;
   - the endpoint named in a port file written after this session started answers, and the address it
     reports matches the file;
-  - the active tab's page reports itself visible and focused;
+  - the active tab's page reports itself visible and focused; with multiple windows, a visible
+    but unfocused page does not prevent checking the remaining pages for the focused one;
   - the same page reports `navigator.webdriver` false: Chrome does not mark the browser as automated
     (Google refuses sign-in in a browser that reports automation, Q3);
   - the browser's user agent is not a headless one;
@@ -141,6 +142,8 @@ Acceptance:
 
   A running browser that fails any of these is UNHEALTHY, naming each failed check. A browser with no
   session is BROWSER_DOWN. A missing or failed signal never counts as healthy.
+  Page properties are returned by value through DevTools, without calling a page's JSON serializer.
+  They remain page-reported health signals, not security attestation against a hostile page.
 - Every session starts Chrome with its automation marker turned off
   (`--disable-blink-features=AutomationControlled`). Since Chrome 155 a DevTools port alone makes every
   page report `navigator.webdriver` true, with no client attached (section 13). Pool browsers do not
@@ -283,7 +286,8 @@ Acceptance:
   browser's profile open. An endpoint that does not answer is supporting evidence only, because on
   this host a closed port can either refuse a connection or drop it. A release frees the lease only
   once the session is shown gone; if that cannot be shown, the release fails and the holder keeps the
-  lease.
+  lease. A takeover that finds an inactive service but an occupied profile restores the previous
+  lease and does not record a completed takeover.
 - A Chrome that exits on its own (a crash) leaves the browser BROWSER_DOWN, and the session is
   recorded as crashed. The holder's next lease starts a new session, with a new endpoint.
 - A new session starts only after any old port file is removed, and its endpoint is read only from a
