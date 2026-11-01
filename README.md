@@ -1,5 +1,7 @@
 # orion-browser
 
+Part of [Cosmocrat OS](https://www.cosmocrat.ai/tools#orion-browser).
+
 Signed-in Chrome browsers for AI agents: one per identity, each on its own virtual screen, leased to one agent at a
 time. A CLI and MCP server for cooperative agents on one Linux host.
 
