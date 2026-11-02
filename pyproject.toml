@@ -16,7 +16,7 @@ Repository = "https://github.com/OrionArchitekton/orion-browser-oss"
 Documentation = "https://github.com/OrionArchitekton/orion-browser-oss/blob/main/README.md"
 
 [project.optional-dependencies]
-dev = ["pytest>=9.1.1"]
+dev = ["pytest>=9.2.0"]
 
 [project.scripts]
 orion-browser = "orion_browser.cli:entry"
