@@ -1,5 +1,7 @@
 # orion-browser
 
+[![OrionArchitekton/orion-browser-oss MCP server](https://glama.ai/mcp/servers/OrionArchitekton/orion-browser-oss/badges/score.svg)](https://glama.ai/mcp/servers/OrionArchitekton/orion-browser-oss)
+
 Part of [Cosmocrat OS](https://www.cosmocrat.ai/tools#orion-browser).
 
 Signed-in Chrome browsers for AI agents: one per identity, each on its own virtual screen, leased to one agent at a
