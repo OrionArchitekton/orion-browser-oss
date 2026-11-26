@@ -1,0 +1,45 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.OrionArchitekton/orion-browser-oss",
+  "title": "orion-browser",
+  "description": "Signed-in Chrome browsers for AI agents: one per identity, leased to one agent at a time.",
+  "repository": {
+    "url": "https://github.com/OrionArchitekton/orion-browser-oss",
+    "source": "github"
+  },
+  "websiteUrl": "https://www.danmercede.com/works/orion-browser/",
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "orion-browser-oss",
+      "version": "0.1.1",
+      "runtimeHint": "uvx",
+      "runtimeArguments": [
+        {
+          "type": "named",
+          "name": "--from",
+          "value": "orion-browser-oss==0.1.1"
+        },
+        {
+          "type": "positional",
+          "value": "orion-browser-mcp",
+          "valueHint": "command"
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "ORION_BROWSER_CONFIG",
+          "description": "Absolute path of the orion-browser config file. Unset or empty: ~/.config/orion-browser/config.toml.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "filepath"
+        }
+      ]
+    }
+  ]
+}

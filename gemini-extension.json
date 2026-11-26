@@ -1,0 +1,20 @@
+{
+  "name": "orion-browser-oss",
+  "version": "0.1.1",
+  "description": "Signed-in Chrome browsers for AI agents on one Linux host: one per identity, leased to one agent at a time.",
+  "mcpServers": {
+    "orion-browser": {
+      "command": "uvx",
+      "args": ["--from", "orion-browser-oss==0.1.1", "orion-browser-mcp"],
+      "timeout": 1000000
+    }
+  },
+  "settings": [
+    {
+      "name": "Config file",
+      "description": "Absolute path of the orion-browser config file. Leave empty for ~/.config/orion-browser/config.toml.",
+      "envVar": "ORION_BROWSER_CONFIG",
+      "sensitive": false
+    }
+  ]
+}
