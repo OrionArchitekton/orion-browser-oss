@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.1
+
+Packaging and listings only; no change to how orion-browser behaves.
+
+- The distribution is now named orion-browser-oss, for PyPI, where orion-browser and orion-browser-mcp
+  belong to other projects. The orion-browser and orion-browser-mcp commands and the orion_browser
+  import package keep their names. An existing `uv tool` install named orion-browser is uninstalled once
+  before upgrading (see the operations runbook).
+- PyPI metadata: author, keywords, classifiers, and Homepage, Issues, Changelog and Security links.
+- server.json for the official MCP Registry as io.github.OrionArchitekton/orion-browser-oss, run from
+  the PyPI package with `uvx --from orion-browser-oss==0.1.1 orion-browser-mcp`, and the README's
+  mcp-name line that proves the package belongs to it.
+- gemini-extension.json, so Gemini CLI can install the MCP server as an extension.
+- README install steps for PyPI, `uvx`, Gemini CLI and the MCP Registry.
+- Dependency floors raised since 0.1.0: mcp 2.3.0 and websockets 17.2.
+
 ## 0.1.0
 
 Initial public MIT release of orion-browser.

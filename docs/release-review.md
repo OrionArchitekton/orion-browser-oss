@@ -26,6 +26,8 @@ These checks do not prove every website accepts a sign-in, authorize account
 mutations, or turn this trusted-host coordination layer into a security sandbox.
 See SECURITY.md and the operations runbook for the actual boundary.
 
-The package remains named orion-browser. The public repository is
-orion-browser-oss. Chrome and system dependencies are separately installed and
+The commands and import package remain named orion-browser. The public
+repository is orion-browser-oss, and from 0.1.1 the PyPI distribution is
+orion-browser-oss too (the PyPI names orion-browser and orion-browser-mcp
+belong to other projects). Chrome and system dependencies are separately installed and
 are not relicensed or bundled by this MIT source release.

@@ -1,5 +1,7 @@
 # orion-browser
 
+<!-- mcp-name: io.github.OrionArchitekton/orion-browser-oss -->
+
 [![OrionArchitekton/orion-browser-oss MCP server](https://glama.ai/mcp/servers/OrionArchitekton/orion-browser-oss/badges/score.svg)](https://glama.ai/mcp/servers/OrionArchitekton/orion-browser-oss)
 
 Part of [Cosmocrat OS](https://www.cosmocrat.ai/tools#orion-browser).
@@ -25,19 +27,26 @@ It is a coordination layer, not a sandbox: see [SECURITY.md](SECURITY.md).
 
 ## Install and set up
 
+orion-browser is on PyPI as `orion-browser-oss` (the names `orion-browser` and `orion-browser-mcp` there belong to
+other projects). It installs the `orion-browser` and `orion-browser-mcp` commands and the `orion_browser` Python
+package.
+
 ```bash
-git clone --branch v0.1.0 https://github.com/OrionArchitekton/orion-browser-oss.git
-cd orion-browser-oss
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install .
+python -m pip install orion-browser-oss==0.1.1      # or: uv tool install orion-browser-oss==0.1.1
 mkdir -p ~/.config/orion-browser
-cp config.example.toml ~/.config/orion-browser/config.toml   # then edit the browsers
-orion-browser setup                          # checks packages, prepares owner-only directories
+curl -fsSL https://raw.githubusercontent.com/OrionArchitekton/orion-browser-oss/v0.1.1/config.example.toml \
+  -o ~/.config/orion-browser/config.toml            # then edit the browsers
+orion-browser setup                                 # checks packages, prepares owner-only directories
 ```
 
-The package and commands are named `orion-browser`; the public source repository is `orion-browser-oss`.
-Chrome and the system packages above are installed separately, under their own licenses.
+From source instead: `git clone --branch v0.1.1 https://github.com/OrionArchitekton/orion-browser-oss.git`, then
+`python -m pip install .` in the checkout and copy its `config.example.toml`.
+
+The distribution and source repository are named `orion-browser-oss`; the commands, the import package and the
+config and state directories are named `orion-browser`. Chrome and the system packages above are installed
+separately, under their own licenses.
 
 ## For agents
 
@@ -60,6 +69,28 @@ compact JSON when it has any, for example `(data: {"browser":"work","holder":"ag
 BUSY.
 Register it with an MCP client as a stdio server whose command is `orion-browser-mcp`, with a tool timeout of at
 least 1000 s (a lease's worst case at the example timings is about 955 s).
+Without installing it first, an MCP client can run it with
+`uvx --from orion-browser-oss==0.1.1 orion-browser-mcp`. The config file and the system packages above are still
+needed. `ORION_BROWSER_CONFIG` points it at a config file other than `~/.config/orion-browser/config.toml`.
+
+### Install in Gemini CLI
+
+```bash
+gemini extensions install https://github.com/OrionArchitekton/orion-browser-oss --ref v0.1.1
+```
+
+The extension ([gemini-extension.json](gemini-extension.json)) starts `orion-browser-mcp` from the pinned PyPI
+release through `uvx`, so `uv` must be on PATH, and sets a 1000 s tool timeout. Gemini CLI passes MCP servers only
+a few safe environment variables, so install asks for `ORION_BROWSER_CONFIG`: leave it empty to use
+`~/.config/orion-browser/config.toml`.
+
+### MCP Registry
+
+[server.json](server.json) describes the server for the
+[official MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.OrionArchitekton/orion-browser-oss`:
+the PyPI package `orion-browser-oss`, run over stdio with
+`uvx --from orion-browser-oss==0.1.1 orion-browser-mcp`. The `mcp-name` comment at the top of this README is how
+the registry checks that the PyPI package belongs to this server.
 
 ## For the operator
 

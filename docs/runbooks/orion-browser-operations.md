@@ -13,13 +13,16 @@ references:
 ## Install or upgrade
 
 1. `sudo apt install tigervnc-standalone-server novnc websockify x11-apps xdotool` (once).
-2. `uv tool install --force <source checkout of orion-browser>`. MCP servers already running keep their loaded code
+2. `uv tool install --force orion-browser-oss==<version>` (the PyPI release), or `uv tool install --force <source
+   checkout of orion-browser-oss>`. uv names the tool after the distribution, `orion-browser-oss`; an install made
+   before 0.1.1 is named `orion-browser`, so run `uv tool uninstall orion-browser` once before the first upgrade
+   past it. MCP servers already running keep their loaded code
    until their agent sessions restart (each CLI call they spawn runs the new code). Browsers running when the tool is
    upgraded keep the Chrome they were started with, and its flags, until they are released: release running browsers
    before upgrading, or release and lease them again after.
 3. Config at `~/.config/orion-browser/config.toml` (see `config.example.toml`), then `orion-browser setup`.
 4. Check: from the source checkout, run the smoke test with the installed tool's own Python, so it tests what step 2
-   installed: `"$(uv tool dir)/orion-browser/bin/python" tests/smoke_real_browser.py` (it needs agent-browser on
+   installed: `"$(uv tool dir)/orion-browser-oss/bin/python" tests/smoke_real_browser.py` (it needs agent-browser on
    PATH). It prints `"ok": true`. It runs its own browser, `smoke`,
    on screen 89 (no browser in the config may use that name or screen), so it can run while the operator's browsers
    are leased; it refuses to start while an `orion-browser-smoke-*` service is in any state but inactive or failed,
@@ -122,7 +125,7 @@ tabs across stops, set `restore_session = true` for it in the config instead.
 ## Rollback
 
 1. Release every browser (`status` lists holders), or stop the services: `systemctl --user stop 'orion-browser-*.service'`.
-2. `uv tool uninstall orion-browser` and remove it from each MCP client (`claude mcp remove orion-browser`; the
+2. `uv tool uninstall orion-browser-oss` (`orion-browser` for an install made before 0.1.1) and remove it from each MCP client (`claude mcp remove orion-browser`; the
    [mcp_servers.orion-browser] entry in Codex's config).
 3. Profiles stay in `~/.local/share/orion-browser/profiles/`. Deleting one removes that local sign-in state; it does not revoke remote sessions. Deletion is the
    operator's call.
