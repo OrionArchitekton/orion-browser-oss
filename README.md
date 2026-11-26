@@ -36,10 +36,18 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install orion-browser-oss==0.1.1      # or: uv tool install orion-browser-oss==0.1.1
 mkdir -p ~/.config/orion-browser
-curl -fsSL https://raw.githubusercontent.com/OrionArchitekton/orion-browser-oss/v0.1.1/config.example.toml \
-  -o ~/.config/orion-browser/config.toml            # then edit the browsers
+cfg=~/.config/orion-browser/config.toml
+if [ ! -e "$cfg" ]; then                            # never replaces a config you already have
+  curl -fsSL https://raw.githubusercontent.com/OrionArchitekton/orion-browser-oss/v0.1.1/config.example.toml \
+    -o "$cfg.download" && mv -n "$cfg.download" "$cfg"
+fi                                                  # then edit the browsers in it
 orion-browser setup                                 # checks packages, prepares owner-only directories
 ```
+
+Upgrading an environment that has 0.1.0 (installed from source as the `orion-browser` distribution): run
+`python -m pip uninstall orion-browser` there first, or use a new virtual environment. Both distributions install
+the same `orion_browser` files and commands, so removing the old one after the new one would delete files the new
+one uses. A `uv tool` install upgrades as the operations runbook describes.
 
 From source instead: `git clone --branch v0.1.1 https://github.com/OrionArchitekton/orion-browser-oss.git`, then
 `python -m pip install .` in the checkout and copy its `config.example.toml`.
