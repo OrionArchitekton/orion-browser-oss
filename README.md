@@ -68,7 +68,8 @@ renews it and returns the same endpoint, so parallel subagents must lease differ
 compact JSON when it has any, for example `(data: {"browser":"work","holder":"agent-x","expires_at":"..."})` after a
 BUSY.
 Register it with an MCP client as a stdio server whose command is `orion-browser-mcp`, with a tool timeout of at
-least 1000 s (a lease's worst case at the example timings is about 955 s).
+least 1000 s (a lease's worst case at the example timings is about 955 s). Raising the `[timing]` values raises
+that worst case, up to about 5,170 s at the config's maxima; the server itself gives up on a CLI call after 5,400 s.
 Without installing it first, an MCP client can run it with
 `uvx --from orion-browser-oss==0.1.1 orion-browser-mcp`. The config file and the system packages above are still
 needed. `ORION_BROWSER_CONFIG` points it at a config file other than `~/.config/orion-browser/config.toml`.
@@ -80,7 +81,8 @@ gemini extensions install https://github.com/OrionArchitekton/orion-browser-oss 
 ```
 
 The extension ([gemini-extension.json](gemini-extension.json)) starts `orion-browser-mcp` from the pinned PyPI
-release through `uvx`, so `uv` must be on PATH, and sets a 1000 s tool timeout. Gemini CLI passes MCP servers only
+release through `uvx`, so `uv` must be on PATH, and sets a 5,400 s tool timeout, the server's own limit for a CLI
+call, so a lease at any allowed `[timing]` values finishes before Gemini gives up. Gemini CLI passes MCP servers only
 a few safe environment variables, so install asks for `ORION_BROWSER_CONFIG`: leave it empty to use
 `~/.config/orion-browser/config.toml`.
 

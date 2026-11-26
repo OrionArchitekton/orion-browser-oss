@@ -6,7 +6,7 @@
     "orion-browser": {
       "command": "uvx",
       "args": ["--from", "orion-browser-oss==0.1.1", "orion-browser-mcp"],
-      "timeout": 1000000
+      "timeout": 5400000
     }
   },
   "settings": [
