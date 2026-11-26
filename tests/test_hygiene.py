@@ -1,5 +1,5 @@
 """The repository must stay publishable: only the kinds of file it holds (source, tests, Markdown, TOML, workflows,
-documentation images), all of them UTF-8 text but the images, no browser artifacts or profile files, no symbolic
+documentation images, and the two named JSON listing manifests), all of them UTF-8 text but the images, no browser artifacts or profile files, no symbolic
 links, no personal addresses, no long dashes, and a .gitignore that keeps artifacts out before they are staged."""
 
 from __future__ import annotations
