@@ -45,6 +45,23 @@ jobs:
         run: |
           [[ "$ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]
           [[ "$BUILD_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+      - name: The run is a successful prepare-release of this repository
+        # download-artifact proves only that the artifact belongs to the run; this proves the run is a release
+        # preparation that passed its source checks. Review-branch automation runs stay eligible.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN_ID: ${{ inputs.build_run_id }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          run="$(gh api "repos/$REPOSITORY/actions/runs/$BUILD_RUN_ID" \
+            --jq '[.path, .status, .conclusion, .repository.full_name, .head_repository.full_name] | @tsv')"
+          expected="$(printf '%s\t%s\t%s\t%s\t%s' .github/workflows/prepare-release.yml completed success \
+            "$REPOSITORY" "$REPOSITORY")"
+          if [[ "$run" != "$expected" ]]; then
+            printf 'release refused: run %s is not a successful prepare-release of %s (%s)\n' \
+              "$BUILD_RUN_ID" "$REPOSITORY" "$run" >&2
+            exit 1
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false

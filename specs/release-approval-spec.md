@@ -25,7 +25,9 @@ wheel, source distribution, and their SHA-256 manifest before requesting upload.
    pins and the recorded build epoch belong to the selected package source, so
    historical reproduction preserves its approved build inputs.
 2. A maintainer selects an artifact by its immutable identifier and supplies the
-   reviewed manifest digest and version. Verification accepts only those exact
+   reviewed manifest digest and version. The build run must be a successful
+   release preparation of this repository; an artifact from any other run, or
+   from a preparation that failed, is refused. Verification accepts only those exact
    files and bytes. A changed file, missing file, extra file, symlink, invalid
    version, or unsafe manifest name is refused before publication.
 3. Publication runs only when explicitly requested from the default branch and

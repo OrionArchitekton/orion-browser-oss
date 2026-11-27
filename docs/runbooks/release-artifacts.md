@@ -88,8 +88,9 @@ publisher disabled and complete a separately authorized manual upload of the
 approved files. Never substitute an automatically approved environment.
 
 Dispatch `release` from main with the build run ID, immutable artifact ID, approved manifest
-digest, and version. Verification rejects any changed, missing, extra, linked,
-or unsafe file. The publishing job downloads that same artifact again, rechecks
+digest, and version. Verification first refuses a run that is not a successful
+`prepare-release` of this repository, then rejects any changed, missing, extra,
+linked, or unsafe file. The publishing job downloads that same artifact again, rechecks
 the approved manifest and checksums, and copies only the two packages to the
 upload directory. It never rebuilds or installs repository dependencies.
 
