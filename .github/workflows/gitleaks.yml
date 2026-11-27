@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_call:  # release preparation runs this scan before it builds
 
 permissions:
   contents: read

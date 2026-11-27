@@ -1,0 +1,108 @@
+name: prepare-release
+
+# Builds a review candidate only. This workflow cannot request a PyPI credential.
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Optional full reviewed source commit on main, for exact artifact reproduction
+        required: false
+        default: ""
+        type: string
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: checks
+    uses: ./.github/workflows/ci.yml
+    with:
+      source_commit: ${{ inputs.source_commit || github.sha }}
+
+  secrets:
+    name: secrets
+    uses: ./.github/workflows/gitleaks.yml
+
+  build:
+    name: build
+    needs: [checks, secrets]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # main's history too, for the check below
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Select reviewed source and retain the automation's archive normalizers
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          REF_TYPE: ${{ github.ref_type }}
+          ORIGINAL_COMMIT: ${{ github.sha }}
+        run: |
+          if [[ "$REF_TYPE" == tag && -n "$SOURCE_COMMIT" ]]; then
+            test "$SOURCE_COMMIT" = "$ORIGINAL_COMMIT"
+          fi
+          cp .github/normalize_wheel.py "$RUNNER_TEMP/normalize_wheel.py"
+          cp .github/normalize_sdist.py "$RUNNER_TEMP/normalize_sdist.py"
+          printf 'Release automation commit: %s\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -n "$SOURCE_COMMIT" ]]; then
+            [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+            git merge-base --is-ancestor "$SOURCE_COMMIT" origin/main
+            git checkout --detach "$SOURCE_COMMIT"
+          fi
+          printf 'Package source commit: %s\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+      - name: The selected package source is on main
+        run: git merge-base --is-ancestor HEAD origin/main
+      - name: The tag names the package's version
+        if: github.ref_type == 'tag'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'EOF'
+          import os, tomllib
+          version = tomllib.load(open("pyproject.toml", "rb"))["project"]["version"]
+          assert os.environ["TAG"] == f"v{version}", f"tag {os.environ['TAG']!r} is not v{version}"
+          EOF
+      - name: Build with the tools pinned by hash
+        # In a fresh virtual environment, every tool installed again from its hashed file (pip skips the hash
+        # check for a package already installed at the pinned version), and without isolation, so that the
+        # build runs only these files.
+        run: |
+          python -m venv "$RUNNER_TEMP/build"
+          "$RUNNER_TEMP/build/bin/python" -m pip install --require-hashes --force-reinstall -r bootstrap-requirements.txt
+          "$RUNNER_TEMP/build/bin/python" -m pip install --require-hashes --force-reinstall \
+            -r .github/build-requirements.txt
+          export SOURCE_DATE_EPOCH=$(cat .github/source-date-epoch.txt)
+          "$RUNNER_TEMP/build/bin/python" -m build --no-isolation
+          python "$RUNNER_TEMP/normalize_sdist.py" dist/*.tar.gz "$SOURCE_DATE_EPOCH"
+          python "$RUNNER_TEMP/normalize_wheel.py" dist/*.whl
+      - name: Release archives carry the view guard, config, bootstrap, and the complete test harness
+        run: |
+          python - <<'PYARCHIVE'
+          import glob, tarfile, zipfile
+          with zipfile.ZipFile(glob.glob('dist/*.whl')[0]) as wheel:
+              assert 'orion_browser/websockify_path/orion_browser_view_guard.py' in wheel.namelist()
+          with tarfile.open(glob.glob('dist/*.tar.gz')[0]) as source:
+              names = {name.split('/', 1)[1] for name in source.getnames() if '/' in name}
+              required = {'bootstrap-requirements.txt', '.github/verify_release.py', 'config.example.toml',
+                          'tests/conftest.py', 'tests/fakes/fake_chrome.py', 'tests/fakes/fake_systemctl.py',
+                          'tests/fakes/websockify/__init__.py'}
+              assert required <= names, sorted(required - names)
+          PYARCHIVE
+      - name: Record the files for private review
+        run: |
+          cd dist
+          sha256sum *.whl *.tar.gz > SHA256SUMS
+          sha256sum SHA256SUMS | tee -a "$GITHUB_STEP_SUMMARY"
+          cat SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reviewed-dist
+          path: dist/
+          if-no-files-found: error

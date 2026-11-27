@@ -1,0 +1,117 @@
+name: release
+
+# Explicit promotion only. Configure PyPI's publisher for this file and the
+# pypi environment, with required human reviewers, before enabling publication.
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Successful prepare-release workflow run holding the artifact
+        required: true
+        type: string
+      artifact_id:
+        description: Immutable Actions artifact ID containing the reviewed files
+        required: true
+        type: string
+      manifest_sha256:
+        description: SHA-256 of the reviewed SHA256SUMS file
+        required: true
+        type: string
+      version:
+        description: Reviewed package version, such as 0.1.1
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pypi-release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Select one immutable artifact
+        env:
+          ARTIFACT_ID: ${{ inputs.artifact_id }}
+          BUILD_RUN_ID: ${{ inputs.build_run_id }}
+        run: |
+          [[ "$ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]
+          [[ "$BUILD_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+      - name: The run is a successful prepare-release of this repository
+        # download-artifact proves only that the artifact belongs to the run; this proves the run is a release
+        # preparation that passed its source checks. Review-branch automation runs stay eligible.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN_ID: ${{ inputs.build_run_id }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          run="$(gh api "repos/$REPOSITORY/actions/runs/$BUILD_RUN_ID" \
+            --jq '[.path, .status, .conclusion, .repository.full_name, .head_repository.full_name] | @tsv')"
+          expected="$(printf '%s\t%s\t%s\t%s\t%s' .github/workflows/prepare-release.yml completed success \
+            "$REPOSITORY" "$REPOSITORY")"
+          if [[ "$run" != "$expected" ]]; then
+            printf 'release refused: run %s is not a successful prepare-release of %s (%s)\n' \
+              "$BUILD_RUN_ID" "$REPOSITORY" "$run" >&2
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ inputs.artifact_id }}
+          run-id: ${{ inputs.build_run_id }}
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: reviewed/
+      - name: Verify the exact reviewed release set
+        env:
+          EXPECTED_MANIFEST_SHA256: ${{ inputs.manifest_sha256 }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: python .github/verify_release.py reviewed "$EXPECTED_MANIFEST_SHA256" "$RELEASE_VERSION"
+      - name: Show the approval target
+        env:
+          ARTIFACT_ID: ${{ inputs.artifact_id }}
+          BUILD_RUN_ID: ${{ inputs.build_run_id }}
+          EXPECTED_MANIFEST_SHA256: ${{ inputs.manifest_sha256 }}
+        run: |
+          printf 'Build run: %s\nArtifact ID: %s\nManifest SHA-256: %s\n' "$BUILD_RUN_ID" "$ARTIFACT_ID" "$EXPECTED_MANIFEST_SHA256" >> "$GITHUB_STEP_SUMMARY"
+          cat reviewed/SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/p/orion-browser-oss
+    permissions:
+      actions: read
+      id-token: write
+    steps:
+      # No checkout, build, or dependency install in this credential-bearing job.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ inputs.artifact_id }}
+          run-id: ${{ inputs.build_run_id }}
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: reviewed/
+      - name: Recheck and stage the approved bytes without rebuilding
+        env:
+          EXPECTED_MANIFEST_SHA256: ${{ inputs.manifest_sha256 }}
+        run: |
+          cd reviewed
+          test "$(sha256sum SHA256SUMS | cut -d ' ' -f1)" = "$EXPECTED_MANIFEST_SHA256"
+          sha256sum --check --strict SHA256SUMS
+          mkdir ../dist
+          cp -- *.whl *.tar.gz ../dist/
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

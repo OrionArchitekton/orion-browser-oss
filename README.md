@@ -134,4 +134,7 @@ python tests/smoke_real_browser.py     # by hand: the real stack
 The [setup guide](https://www.danmercede.com/guides/multi-agent-browser-pool) walks through the design and use.
 The [product page](https://www.danmercede.com/works/orion-browser/) summarizes the tool.
 
+Releases go to PyPI in two steps, a reviewed build and then its promotion through Trusted Publishing:
+[docs/runbooks/release-artifacts.md](docs/runbooks/release-artifacts.md).
+
 The specification is [specs/orion-browser-spec.md](specs/orion-browser-spec.md). MIT licensed.

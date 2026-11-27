@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+Release automation only; no change to the package's code.
+
+- Two-step PyPI release through Trusted Publishing, the same as orion-phone. `prepare-release`
+  (manual, or a `v*` tag push) runs the checks and the secret scan on the selected source, builds with
+  hash-pinned tools and a recorded build epoch, normalizes both archives, and uploads them with their
+  SHA256SUMS as the `reviewed-dist` artifact; it has no publishing credential. `release` (manual, from
+  main only) verifies that exact artifact against the reviewed manifest digest and version, then, after
+  approval of the `pypi` environment, publishes those bytes without rebuilding.
+- CI checks and the gitleaks scan can be called by release preparation, CI builds with the release's
+  pinned tools, and the source distribution now carries the full test harness and the release scripts.
+- docs/runbooks/release-artifacts.md and specs/release-approval-spec.md describe the process.
+
 ## 0.1.1
 
 Packaging and listings only; no change to how orion-browser behaves.
