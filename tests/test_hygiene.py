@@ -1,5 +1,5 @@
 """The repository must stay publishable: only the kinds of file it holds (source, tests, Markdown, TOML, workflows,
-documentation images, and the two named JSON listing manifests), all of them UTF-8 text but the images, no browser artifacts or profile files, no symbolic
+documentation images, the two named JSON listing manifests, and the named release-automation files), all of them UTF-8 text but the images, no browser artifacts or profile files, no symbolic
 links, no personal addresses, no long dashes, and a .gitignore that keeps artifacts out before they are staged."""
 
 from __future__ import annotations
@@ -21,6 +21,10 @@ IMAGE_DIR = "docs/assets/"  # documentation images, and nothing else, may live h
 ALLOWED_FILES = {
     "LICENSE", "MANIFEST.in", ".gitignore", "pyproject.toml", "config.example.toml", ".github/dependabot.yml",
     "server.json", "gemini-extension.json",  # MCP Registry and Gemini CLI manifests
+    # Release automation: hashed installer and build pins, the recorded build epoch, and the artifact scripts.
+    "bootstrap-requirements.txt", ".github/build-requirements.in", ".github/build-requirements.txt",
+    ".github/source-date-epoch.txt", ".github/verify_release.py", ".github/normalize_sdist.py",
+    ".github/normalize_wheel.py",
 }
 ALLOWED_PATTERNS = ("*.md", "src/orion_browser/*.py", "tests/*.py", "tests/fakes/*.py", ".github/workflows/*.yml")
 FORBIDDEN_PREFIXES = ("docs/superpowers/",)  # internal planning documents never enter the repository

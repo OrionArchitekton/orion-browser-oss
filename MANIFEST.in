@@ -1,4 +1,7 @@
-include config.example.toml SECURITY.md CHANGELOG.md
+include config.example.toml SECURITY.md CHANGELOG.md AGENTS.md
+include bootstrap-requirements.txt
+recursive-include .github *.py *.txt *.in *.yml
 recursive-include docs *.md
 prune docs/superpowers
 recursive-include specs *.md
+recursive-include tests *.py
