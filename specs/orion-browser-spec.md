@@ -476,9 +476,12 @@ All outside the repository.
   websockify, xdotool and xwd on PATH, replaying hand-written behavior. No screenshot, screen capture,
   profile, cookie database, session record, HAR file or config from a real browser is ever committed:
   a test accepts only the kinds of file the repository holds (source, tests, Markdown, TOML, workflow
-  files, images under `docs/assets/`, and two named JSON listing manifests at the root: `server.json`
-  for the MCP Registry and `gemini-extension.json` for Gemini CLI; no other JSON), and refuses Chrome profile files, SQLite files, symbolic
-  links, nested repositories (gitlinks), and any file that is not UTF-8 text.
+  files, images under `docs/assets/`, two named JSON listing manifests at the root: `server.json`
+  for the MCP Registry and `gemini-extension.json` for Gemini CLI, no other JSON; and the named
+  release-automation files: `bootstrap-requirements.txt`, `.github/build-requirements.in` and
+  `.txt`, `.github/source-date-epoch.txt`, and the `.github` scripts `verify_release.py`,
+  `normalize_sdist.py` and `normalize_wheel.py`), and refuses Chrome profile files, SQLite files,
+  symbolic links, nested repositories (gitlinks), and any file that is not UTF-8 text.
 - `.gitignore` excludes profiles, state, images, config, Chrome profile files, cookie databases and HAR
   files, except documentation images; a test checks that it covers every artifact suffix and profile
   file name the hygiene test refuses.
