@@ -1,5 +1,5 @@
 """The repository must stay publishable: only the kinds of file it holds (source, tests, Markdown, TOML, workflows,
-documentation images), all of them UTF-8 text but the images, no browser artifacts or profile files, no symbolic
+documentation images, and the two named JSON listing manifests), all of them UTF-8 text but the images, no browser artifacts or profile files, no symbolic
 links, no personal addresses, no long dashes, and a .gitignore that keeps artifacts out before they are staged."""
 
 from __future__ import annotations
@@ -18,7 +18,10 @@ ARTIFACT_SUFFIXES = IMAGE_SUFFIXES | {".xwd", ".jsonl", ".mp4", ".webm", ".har",
 IMAGE_DIR = "docs/assets/"  # documentation images, and nothing else, may live here
 # The kinds of file this repository holds. Anything else is refused, whatever it is: an allowlist, so an artifact
 # nobody thought to name (a cookie export, a browser database) cannot slip through. Extend it deliberately.
-ALLOWED_FILES = {"LICENSE", "MANIFEST.in", ".gitignore", "pyproject.toml", "config.example.toml", ".github/dependabot.yml"}
+ALLOWED_FILES = {
+    "LICENSE", "MANIFEST.in", ".gitignore", "pyproject.toml", "config.example.toml", ".github/dependabot.yml",
+    "server.json", "gemini-extension.json",  # MCP Registry and Gemini CLI manifests
+}
 ALLOWED_PATTERNS = ("*.md", "src/orion_browser/*.py", "tests/*.py", "tests/fakes/*.py", ".github/workflows/*.yml")
 FORBIDDEN_PREFIXES = ("docs/superpowers/",)  # internal planning documents never enter the repository
 # Files a Chrome profile holds: cookies, saved logins, form data, history, settings, the DevTools port.
